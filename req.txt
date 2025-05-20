@@ -1,0 +1,5 @@
+flask
+jinja2
+python-dotenv
+requests
+web3

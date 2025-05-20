@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ethereum Transactions Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Ethereum Transactions Viewer</h1>
+
+    <form method="POST">
+        <label for="address">Wallet Address:</label>
+        <input type="text" id="address" name="address" required>
+        <label for="start_block">Start Block:</label>
+        <input type="number" id="start_block" name="start_block" required>
+        <label for="date">Balance at Date (YYYY-MM-DD):</label>
+        <input type="text" id="date" name="date">
+        <button type="submit">Fetch Transactions</button>
+    </form>
+
+    {% if historical_eth_balance is defined and historical_token_balances is defined %}
+    <div class="balance-section">
+        <h2>Historical Balances at {{ historical_date }} 00:00 UTC</h2>
+        <p><strong>ETH Balance:</strong> {{ historical_eth_balance }} ETH</p>
+        <h3>Token Balances:</h3>
+        <ul>
+            {% for token in historical_token_balances %}
+                <li>{{ token.symbol }}: {{ token.balance }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <h2>Transactions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Hash</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Value (ETH)</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr class="{{ tx.tx_type }}">
+                <td>{{ tx.tx_type }}</td>
+                <td><a href="https://etherscan.io/tx/{{ tx.hash }}" target="_blank">{{ tx.hash[:10] }}...</a></td>
+                <td>{{ tx.from }}</td>
+                <td>{{ tx.to }}</td>
+                <td>{{ '%.7f'|format(tx.value_eth) }}</td>
+                <td>{{ tx.timeStamp|datetimeformat }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if token_transfers %}
+    <h2>Token Transfers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Token</th>
+                <th>Symbol</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Amount</th>
+                <th>Time</th>
+                <th>Txn Hash</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in token_transfers %}
+            <tr class="token">
+                <td>{{ tx.tokenName }}</td>
+                <td>{{ tx.tokenSymbol }}</td>
+                <td>{{ tx.from }}</td>
+                <td>{{ tx.to }}</td>
+                <td>{{ tx.value_formatted }}</td>
+                <td>{{ tx.timeStamp|datetimeformat }}</td>
+                <td><a href="https://etherscan.io/tx/{{ tx.hash }}" target="_blank">{{ tx.hash[:10] }}...</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+</html>
