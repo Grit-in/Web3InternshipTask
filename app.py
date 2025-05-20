@@ -12,12 +12,15 @@ ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
 INFURA_URL = os.getenv("INFURA_URL")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 
+
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
     return datetime.fromtimestamp(int(value), timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
+
 def get_latest_block():
     return web3.eth.block_number
+
 
 def get_block_by_timestamp(timestamp):
     low = 0
@@ -31,25 +34,28 @@ def get_block_by_timestamp(timestamp):
             high = mid - 1
     return high
 
+
 def get_eth_balance_at_block(address, block):
     balance_wei = web3.eth.get_balance(address, block_identifier=block)
     return web3.from_wei(balance_wei, 'ether')
 
+
 def get_token_balance_at_block(address, token_address, block):
-    erc20_abi = '[{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"}]'
-    token_contract = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=erc20_abi)
+    erc20_abi = '[{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"}]'
+
     try:
+        token_contract = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=erc20_abi)
         symbol = token_contract.functions.symbol().call()
-        balance = token_contract.functions.balanceOf(Web3.to_checksum_address(address)).call(block_identifier=block)
-        decimals = 18
+        balance = token_contract.functions.balanceOf(address).call(block_identifier=block)
         try:
             decimals = token_contract.functions.decimals().call()
         except:
-            pass
+            decimals = 18
         balance_formatted = balance / (10 ** decimals)
         return {"symbol": symbol, "balance": round(balance_formatted, 7)}
     except:
         return None
+
 
 def fetch_transactions(address, start_block, end_block):
     url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
@@ -57,11 +63,13 @@ def fetch_transactions(address, start_block, end_block):
     data = response.json()
     return data['result'] if data['status'] == '1' else []
 
+
 def fetch_internal_transactions(address, start_block, end_block):
     url = f"https://api.etherscan.io/api?module=account&action=txlistinternal&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
     response = requests.get(url)
     data = response.json()
     return data['result'] if data['status'] == '1' else []
+
 
 def fetch_token_transfers(address, start_block, end_block):
     url = f"https://api.etherscan.io/api?module=account&action=tokentx&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
@@ -76,6 +84,7 @@ def fetch_token_transfers(address, start_block, end_block):
             tx['value_formatted'] = 0
     return data['result']
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     transactions = []
@@ -85,7 +94,12 @@ def index():
     historical_date = None
 
     if request.method == 'POST':
-        address = request.form['address']
+        try:
+            raw_address = request.form['address']
+            address = Web3.to_checksum_address(raw_address)
+        except Exception as e:
+            return f"Invalid Ethereum address: {e}", 400
+
         start_block = int(request.form['start_block'])
         end_block = get_latest_block()
         historical_date = request.form.get('date')
@@ -113,9 +127,13 @@ def index():
             token_addresses = list(set([tx['contractAddress'] for tx in token_transfers]))
 
             for token_addr in token_addresses:
-                token_info = get_token_balance_at_block(address, token_addr, block_at_time)
-                if token_info:
-                    historical_token_balances.append(token_info)
+                try:
+                    checksummed_token_addr = Web3.to_checksum_address(token_addr)
+                    token_info = get_token_balance_at_block(address, checksummed_token_addr, block_at_time)
+                    if token_info:
+                        historical_token_balances.append(token_info)
+                except:
+                    continue
 
         return render_template(
             'index.html',
@@ -127,6 +145,7 @@ def index():
         )
 
     return render_template('index.html', transactions=[], token_transfers=[])
+
 
 if __name__ == '__main__':
     app.run(debug=True)
