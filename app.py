@@ -57,32 +57,30 @@ def get_token_balance_at_block(address, token_address, block):
         return None
 
 
-def fetch_transactions(address, start_block, end_block):
-    url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    return data['result'] if data['status'] == '1' else []
+def fetch_all_paged_data(url_base, address, start_block, end_block, label):
+    all_results = []
+    chunk_size = 10000
+    current = start_block
 
+    while current <= end_block:
+        chunk_end = min(current + chunk_size - 1, end_block)
+        url = f"{url_base}&address={address}&startblock={current}&endblock={chunk_end}&sort=asc&apikey={ETHERSCAN_API_KEY}"
+        print(f"Fetching {label} txs: blocks {current} to {chunk_end}")
+        response = requests.get(url)
+        data = response.json()
 
-def fetch_internal_transactions(address, start_block, end_block):
-    url = f"https://api.etherscan.io/api?module=account&action=txlistinternal&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    return data['result'] if data['status'] == '1' else []
+        if data['status'] == '1':
+            all_results.extend(data['result'])
+        elif data['message'] == 'No transactions found':
+            print(f"No {label} transactions in block range {current}-{chunk_end}")
+        else:
+            print(f"Error fetching {label} from {current} to {chunk_end}: {data['message']}")
+            break
 
+        current = chunk_end + 1
 
-def fetch_token_transfers(address, start_block, end_block):
-    url = f"https://api.etherscan.io/api?module=account&action=tokentx&address={address}&startblock={start_block}&endblock={end_block}&sort=asc&apikey={ETHERSCAN_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data['status'] != '1':
-        return []
-    for tx in data['result']:
-        try:
-            tx['value_formatted'] = int(tx['value']) / (10 ** int(tx['tokenDecimal']))
-        except:
-            tx['value_formatted'] = 0
-    return data['result']
+    print(f"Total {label} transactions fetched: {len(all_results)}")
+    return all_results
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -104,9 +102,20 @@ def index():
         end_block = get_latest_block()
         historical_date = request.form.get('date')
 
-        normal_txs = fetch_transactions(address, start_block, end_block)
-        internal_txs = fetch_internal_transactions(address, start_block, end_block)
-        token_transfers = fetch_token_transfers(address, start_block, end_block)
+        normal_txs = fetch_all_paged_data(
+            "https://api.etherscan.io/api?module=account&action=txlist",
+            address, start_block, end_block, "normal"
+        )
+
+        internal_txs = fetch_all_paged_data(
+            "https://api.etherscan.io/api?module=account&action=txlistinternal",
+            address, start_block, end_block, "internal"
+        )
+
+        token_transfers = fetch_all_paged_data(
+            "https://api.etherscan.io/api?module=account&action=tokentx",
+            address, start_block, end_block, "token"
+        )
 
         for tx in normal_txs:
             tx['tx_type'] = 'normal'
@@ -115,6 +124,12 @@ def index():
         for tx in internal_txs:
             tx['tx_type'] = 'internal'
             tx['value_eth'] = float(Web3.from_wei(int(tx['value']), 'ether'))
+
+        for tx in token_transfers:
+            try:
+                tx['value_formatted'] = int(tx['value']) / (10 ** int(tx['tokenDecimal']))
+            except:
+                tx['value_formatted'] = 0
 
         transactions = sorted(normal_txs + internal_txs, key=lambda x: int(x['timeStamp']))
 

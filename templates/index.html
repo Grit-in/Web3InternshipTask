@@ -50,7 +50,7 @@
                 <td><a href="https://etherscan.io/tx/{{ tx.hash }}" target="_blank">{{ tx.hash[:10] }}...</a></td>
                 <td>{{ tx.from }}</td>
                 <td>{{ tx.to }}</td>
-                <td>{{ '%.7f'|format(tx.value_eth) }}</td>
+                <td>{{ '%.10f'|format(tx.value_eth) }}</td>
                 <td>{{ tx.timeStamp|datetimeformat }}</td>
             </tr>
             {% endfor %}
