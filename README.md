@@ -51,3 +51,6 @@ This web application allows users to explore Ethereum wallet activity. Given a w
 
    ```bash
    py app.py
+
+
+### Warning for large amounts of data it will take a longer time to fetch everything so I added a print to show the progress it will show in the terminal/ide.
