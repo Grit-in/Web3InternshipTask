@@ -1,34 +1,53 @@
-# Web3InternshipTask
+# Web3InternshipTask – Ethereum Crawler Web Application
 
-## Etherium Crawler Web Application made in python
+## Description
 
-  ### Description
-  
-   &nbsp; This Web Application will take a wallet address along with a block and will show all normal and internal transactions from that to the latest
-   &nbsp;&nbsp;block. Along with that the application will display all token transfers. The Web App will also take a date in the YYYY-MM-DD format and give &nbsp;&nbsp;you the balance of the adress in ETH and below will show all other tokens.
+This web application allows users to explore Ethereum wallet activity. Given a wallet address and a starting block, it displays:
 
-  ### Technologies used
+- All **normal** and **internal transactions** from the given block to the latest.
+- All **ERC-20 token transfers** involving the address.
+- Historical **ETH and token balances** on a specified date (`YYYY-MM-DD` format).
 
-  &nbsp; It uses etherscan.io and infura.io APIs for data. The Backend is made in python using web3.py and requests.py the Frontend is just pure html &nbsp;&nbsp;and css its connected to the Backend using Flash and jinja2.
-  
-&nbsp;&nbsp;Libs used:  
-  &nbsp;  &nbsp;&nbsp;flask  
-   &nbsp;  &nbsp;&nbsp;jinja2  
-    &nbsp;  &nbsp;&nbsp;python-dotenv  
-   &nbsp;  &nbsp;&nbsp;requests  
-    &nbsp;  &nbsp;&nbsp;web3  
+## Technologies Used
 
-  ### Set-up
-  &nbsp;  1. Download the folder from git or git clone it into a folder and setup a python virtual enviorment.
+- **APIs:**
+  - [etherscan.io](https://etherscan.io)
+  - [infura.io](https://infura.io)
+- **Backend:**
+  - Python
+  - `web3.py`, `requests`, `Flask`, `Jinja2`
+- **Frontend:**
+  - Pure HTML & CSS
+
+### Python Libraries
+
+- `flask`
+- `jinja2`
+- `python-dotenv`
+- `requests`
+- `web3`
+
+## Setup Instructions
+
+1. **Clone the repository** and set up a Python virtual environment:
+
+   ```bash
+   git clone https://github.com/your-repo/Web3InternshipTask.git
+   cd Web3InternshipTask
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+2. Setup the **.env** file and inside put
+   ```bash
+   ETHERSCAN_API_KEY=your_etherscan_api_key
+   INFURA_URL=https://mainnet.infura.io/v3/your_infura_project_id
   
-  &nbsp;  2. Set up an .env file in the Web3InternshipTask folder and insert your etherscan_api and infura_url in this format be sure its not set as .env.txt 
-  &nbsp;&nbsp;but as a .env type file.
-  
-  ` ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY`
-  
-   ` INFURA_URL=https://mainnet.infura.io/v3/your_infura_link`
+3. Install the requirements by running this command in the env
+
+   ``` bash
+   pip install -r req.txt 
    
-  &nbsp; 3. In the same folder run the command in your enviorment ` pip install -r req.txt `
+4. Run the application with
 
-  &nbsp; 4. Run the command ` py app.py ` a dev server will open on a localhost address .
-    
+   ```bash
+       py app.py
