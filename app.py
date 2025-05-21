@@ -41,8 +41,30 @@ def get_eth_balance_at_block(address, block):
 
 
 def get_token_balance_at_block(address, token_address, block):
-    erc20_abi = '[{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"}]'
-
+    erc20_abi = '''[
+                      {
+                        "constant": true,
+                        "inputs": [{ "name": "owner", "type": "address" }],
+                        "name": "balanceOf",
+                        "outputs": [{ "name": "", "type": "uint256" }],
+                        "type": "function"
+                      },
+                      {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "symbol",
+                        "outputs": [{ "name": "", "type": "string" }],
+                        "type": "function"
+                      },
+                      {
+                        "constant": true,
+                        "inputs": [],
+                        "name": "decimals",
+                        "outputs": [{ "name": "", "type": "uint8" }],
+                        "type": "function"
+                      }
+                    ]
+           '''
     try:
         token_contract = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=erc20_abi)
         symbol = token_contract.functions.symbol().call()
