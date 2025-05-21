@@ -50,4 +50,4 @@ This web application allows users to explore Ethereum wallet activity. Given a w
 4. Run the application with
 
    ```bash
-       py app.py
+   py app.py
