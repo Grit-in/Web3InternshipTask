@@ -32,7 +32,7 @@ This web application allows users to explore Ethereum wallet activity. Given a w
 1. **Clone the repository** and set up a Python virtual environment:
 
    ```bash
-   git clone https://github.com/your-repo/Web3InternshipTask.git
+   git clone https://github.com/Grit-in/Web3InternshipTask
    cd Web3InternshipTask
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
